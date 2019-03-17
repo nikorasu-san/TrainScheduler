@@ -69,11 +69,32 @@ $(document).ready(function () {
 
     printTable();
 
+
+    // every second increase the progress bar. starting two to closer match database speed
+    let counter = 0;
+    let countdown = 60;
+    setInterval(function () {
+        let progress = counter * 1.67;
+        if (counter < 60) {
+            counter++;
+            countdown--;
+            $(".progress-bar").attr("style", "width: " + progress + "%")
+            $(".progress-bar").html("Automatic update in " + countdown + " seconds.")
+            console.log(counter)
+        } else {
+            counter = 0;
+            countdown = 60;
+            $(".progress-bar").attr("style", "width: " + progress + "%")
+            $("#train-table").empty();
+            printTable();
+        }
+    }, 1000);
+
     // set page to refresh every minute
     setInterval(function () {
         console.log("60 sec", moment()._d);
-        $("#train-table").empty();
-        printTable();
+        // $("#train-table").empty();
+        // printTable();
     }, 60000);
 
     // edit button

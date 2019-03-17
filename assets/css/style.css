@@ -1,3 +1,7 @@
-.btn {
+.btn-danger,.btn-secondary {
     margin: 5px;
+}
+
+.btn-primary {
+    margin-top: 5px;
 }
