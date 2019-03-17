@@ -5,3 +5,8 @@
 .btn-primary {
     margin-top: 5px;
 }
+
+body {
+    background-image: url(../images/perspective-public-transportation-railway-1771670.jpg);
+    background-size: cover;
+}

@@ -162,7 +162,6 @@ $(document).ready(function () {
         let trainDestination = $("#inputDestination").val();
         let trainFirstRun = $("#inputFirstRun").val();
         let trainFrequency = $("#inputFrequency").val();
-        let trainRefreshCounter = 0;
         // console.log(trainName)
         // console.log(trainDestination)
         // console.log(trainFirstRun)
@@ -172,8 +171,7 @@ $(document).ready(function () {
             trainName: trainName,
             trainDestination: trainDestination,
             trainFirstRun: trainFirstRun,
-            trainFrequency: trainFrequency,
-            trainRefreshCounter: trainRefreshCounter
+            trainFrequency: trainFrequency
         })
         $("#train-table").empty()
     });
