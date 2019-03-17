@@ -11,26 +11,26 @@ $(document).ready(function () {
     firebase.initializeApp(config);
     let database = firebase.database();
     let trainDatabase = database.ref("/train_schedule")
-    //set timer to reload the page
-    //let serverTime = firebase.database.ServerValue.TIMESTAMP;
-    console.log(moment()._d)
-    let visitTimestamp = moment()._d
 
 
+    // refresh button for any user ease  
     $("#refresh").on("click", function () {
         location.reload();
     })
 
     function printTable() {
         database.ref("/train_schedule").on("child_added", function (snapshot) {
+            console.log("snap: ", snapshot)
+            console.log("key: ", snapshot.key)
             console.log("before if: ", snapshot.val());
             let train = snapshot.val()
             let row = $("<tr>");
-            let colName = $("<td class='name'>");
+            $(row).attr("id", snapshot.key)
+            let colName = $("<td class='name editable'>");
             $(colName).html(train.trainName)
-            let colDestination = $("<td class='destination'>");
+            let colDestination = $("<td class='destination editable'>");
             $(colDestination).html(train.trainDestination)
-            let colFrequency = $("<td class='freq'>");
+            let colFrequency = $("<td class='freq editable'>");
             $(colFrequency).html(train.trainFrequency);
             // math for next train and minutes to next train
             let initialRun = moment(train.trainFirstRun, "HH:mm").subtract(1, "months");
@@ -48,9 +48,16 @@ $(document).ready(function () {
             let nextTrainFormat = moment(nextTrain).format("HH:mm");
             let colNextTrain = $("<td class='next-train'>");
             $(colNextTrain).html(nextTrainFormat);
+            // create edit and remove buttons
+            let colControls = $("<td class='controls'>")
+            let editButton = $("<button class='edit btn btn-secondary'>");
+            $(editButton).html("Edit")
+            let removeButton = $("<button class='remove btn btn-danger'>");
+            $(removeButton).html("Remove");
+            $(colControls).append(editButton, removeButton)
 
             // print row
-            $(row).append(colName, colDestination, colFrequency, colNextTrain, colMinutesAway);
+            $(row).append(colName, colDestination, colFrequency, colNextTrain, colMinutesAway, colControls);
             $("#train-table").append(row)
             let trainRefreshCounter = train.trainRefreshCounter;
             console.log("counter: ", trainRefreshCounter)
@@ -61,103 +68,68 @@ $(document).ready(function () {
     }
 
     printTable();
-    // listen to database
-    // push children to page
-    /*
-        database.ref("/train_schedule").on("child_added", function (snapshot) {
-            //printTable(snapshot)
-    
-            console.log("before if: ", snapshot.val());
-            let train = snapshot.val()
-            let row = $("<tr>");
-            let colName = $("<td class='name'>");
-            $(colName).html(train.trainName)
-            let colDestination = $("<td class='destination'>");
-            $(colDestination).html(train.trainDestination)
-            let colFrequency = $("<td class='freq'>");
-            $(colFrequency).html(train.trainFrequency);
-            // math for next train and minutes to next train
-            let initialRun = moment(train.trainFirstRun, "HH:mm").subtract(1, "months");
-            console.log("1 month subtracted: ", initialRun);
-            let currentTime = moment();
-    
-            let timeDiff = moment().diff(moment(initialRun), "minutes");
-            let remainder = timeDiff % train.trainFrequency;
-            //console.log("remainder: ", remainder)
-            let minutesAway = train.trainFrequency - remainder;
-            let colMinutesAway = $("<td class='min-away'>");
-            $(colMinutesAway).html(minutesAway)
-            //console.log("min away: ", minutesAway)
-            let nextTrain = moment().add(minutesAway, "minutes");
-            let nextTrainFormat = moment(nextTrain).format("HH:mm");
-            let colNextTrain = $("<td class='next-train'>");
-            $(colNextTrain).html(nextTrainFormat);
-    
-            // print row
-            $(row).append(colName, colDestination, colFrequency, colNextTrain, colMinutesAway);
-            $("#train-table").append(row)
-            let trainRefreshCounter = train.trainRefreshCounter;
-            console.log("counter: ", trainRefreshCounter)
-            console.log("d. counter: ", train.trainRefreshCounter)
-    
-            // setInterval(function () {
-            //     $("#train-table").empty()
-            //     printTable(snapshot)
-            //     console.log("5sec")
-            // }, 5000);
-    
-        }, function (errorObject) {
-            console.log("The read failed: " + errorObject.code);
-        });
-    */
 
+    // set page to refresh every minute
     setInterval(function () {
-        console.log("60 sec")
-        $("#train-table").empty()
-        printTable()
-        /* database.ref("/train_schedule").on("child_added", function (snapshot) {
-
-            console.log("before if: ", snapshot.val());
-            let train = snapshot.val()
-            let row = $("<tr>");
-            let colName = $("<td class='name'>");
-            $(colName).html(train.trainName)
-            let colDestination = $("<td class='destination'>");
-            $(colDestination).html(train.trainDestination)
-            let colFrequency = $("<td class='freq'>");
-            $(colFrequency).html(train.trainFrequency);
-            // math for next train and minutes to next train
-            let initialRun = moment(train.trainFirstRun, "HH:mm").subtract(1, "months");
-            console.log("1 month subtracted: ", initialRun);
-            let currentTime = moment();
-
-            let timeDiff = moment().diff(moment(initialRun), "minutes");
-            let remainder = timeDiff % train.trainFrequency;
-            //console.log("remainder: ", remainder)
-            let minutesAway = train.trainFrequency - remainder;
-            let colMinutesAway = $("<td class='min-away'>");
-            $(colMinutesAway).html(minutesAway)
-            //console.log("min away: ", minutesAway)
-            let nextTrain = moment().add(minutesAway, "minutes");
-            let nextTrainFormat = moment(nextTrain).format("HH:mm");
-            let colNextTrain = $("<td class='next-train'>");
-            $(colNextTrain).html(nextTrainFormat);
-
-            // print row
-            $(row).append(colName, colDestination, colFrequency, colNextTrain, colMinutesAway);
-            $("#train-table").append(row)
-            let trainRefreshCounter = train.trainRefreshCounter;
-            console.log("counter: ", trainRefreshCounter)
-            console.log("d. counter: ", train.trainRefreshCounter)
-
-
-        }, function (errorObject) {
-            console.log("The read failed: " + errorObject.code);
-        });
-        console.log("5 sec done") */
+        console.log("60 sec", moment()._d);
+        $("#train-table").empty();
+        printTable();
     }, 60000);
 
+    // edit button
+    $(document).on("click", ".edit", function () {
+        //isolate this .name .destination .freq
+        let trainRow = $(this).siblings(".editable");
+        console.log("trainRow class: ", $(trainRow).attr("class"));
+        let trainRowClass = $(trainRow).attr("class");
+        // $(trainRow).on("<td>").replaceWith("<td><input>");
+        $(trainRow).html("<input>");
+        //$("input").addClass(trainRowClass);
+        $("input").addClass("field");
+        console.log("this ", this);
+        $(this).attr("class", "save btn btn-success");
+        $(this).text("Save");
+    });
 
+    // save button
+    $(document).on("click", ".save", function () {
+        // grab value
+        let valueName = $(this).siblings(".name").children().val();
+        let valueDestination = $(this).siblings(".destination").children().val();
+        let valueFreq = $(this).siblings(".freq").children().val();
+        console.log("edit set: " + valueName + "," + valueDestination + "," + valueFreq)
+        // grab id
+        let key = $(this).parent().attr("id")
+        console.log('this id on save: ', key)
+        // check value and set to database in correct object/node
+        console.log('save: database.ref("/train_schedule/' + key + '")')
+        if (valueName !== "" && valueName.trim() !== "") {
+            database.ref('/train_schedule/' + key).update({
+                trainName: valueName
+            })
+        }
+
+        if (valueDestination !== "" && valueDestination.trim() !== "") {
+            database.ref('/train_schedule/' + key).update({
+                trainDestination: valueDestination
+            })
+        }
+
+        if (valueFreq !== "" && valueFreq.trim() !== "") {
+            database.ref('/train_schedule/' + key).update({
+                trainFrequency: valueFreq
+            })
+        }
+
+        location.reload()
+    });
+
+    // remove button
+    $(document).on("click", ".remove", function () {
+        let key = $(this).parent().attr("id")
+        database.ref('/train_schedule/' + key).remove()
+        location.reload()
+    });
 
 
 
@@ -183,7 +155,6 @@ $(document).ready(function () {
             trainRefreshCounter: trainRefreshCounter
         })
         $("#train-table").empty()
-        //location.reload()
     });
 
 
