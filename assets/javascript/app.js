@@ -10,13 +10,12 @@ $(document).ready(function () {
     };
     firebase.initializeApp(config);
     let database = firebase.database();
-    let trainDatabase = database.ref("/train_schedule")
 
 
     // refresh button for any user ease  
     $("#refresh").on("click", function () {
         location.reload();
-    })
+    });
 
     function printTable() {
         database.ref("/train_schedule").on("child_added", function (snapshot) {
@@ -35,8 +34,6 @@ $(document).ready(function () {
             // math for next train and minutes to next train
             let initialRun = moment(train.trainFirstRun, "HH:mm").subtract(1, "months");
             console.log("1 month subtracted: ", initialRun);
-            let currentTime = moment();
-
             let timeDiff = moment().diff(moment(initialRun), "minutes");
             let remainder = timeDiff % train.trainFrequency;
             //console.log("remainder: ", remainder)
@@ -54,14 +51,11 @@ $(document).ready(function () {
             $(editButton).html("Edit")
             let removeButton = $("<button class='remove btn btn-danger'>");
             $(removeButton).html("Remove");
-            $(colControls).append(editButton, removeButton)
+            $(colControls).append(editButton, removeButton);
 
             // print row
             $(row).append(colName, colDestination, colFrequency, colNextTrain, colMinutesAway, colControls);
-            $("#train-table").append(row)
-            let trainRefreshCounter = train.trainRefreshCounter;
-            console.log("counter: ", trainRefreshCounter)
-            console.log("d. counter: ", train.trainRefreshCounter)
+            $("#train-table").append(row);
         }, function (errorObject) {
             console.log("The read failed: " + errorObject.code);
         });
@@ -69,8 +63,7 @@ $(document).ready(function () {
 
     printTable();
 
-
-    // every second increase the progress bar. starting two to closer match database speed
+    // Every second increase the progress bar. At 1 minute, re-print the schedule
     let counter = 0;
     let countdown = 60;
     setInterval(function () {
@@ -80,7 +73,6 @@ $(document).ready(function () {
             countdown--;
             $(".progress-bar").attr("style", "width: " + progress + "%")
             $(".progress-bar").html("Automatic update in " + countdown + " seconds.")
-            console.log(counter)
         } else {
             counter = 0;
             countdown = 60;
@@ -91,21 +83,21 @@ $(document).ready(function () {
     }, 1000);
 
     // set page to refresh every minute
-    setInterval(function () {
-        console.log("60 sec", moment()._d);
-        // $("#train-table").empty();
-        // printTable();
-    }, 60000);
+    // setInterval(function () {
+    //     console.log("60 sec", moment()._d);
+    //     // $("#train-table").empty();
+    //     // printTable();
+    // }, 60000);
 
     // edit button
     $(document).on("click", ".edit", function () {
-        //isolate this .name .destination .freq
+        // isolate this .name .destination .freq
         let trainRow = $(this).siblings(".editable");
         console.log("trainRow class: ", $(trainRow).attr("class"));
-        let trainRowClass = $(trainRow).attr("class");
+        // let trainRowClass = $(trainRow).attr("class");
         // $(trainRow).on("<td>").replaceWith("<td><input>");
         $(trainRow).html("<input>");
-        //$("input").addClass(trainRowClass);
+        // $("input").addClass(trainRowClass);
         $("input").addClass("field");
         console.log("this ", this);
         $(this).attr("class", "save btn btn-success");
@@ -119,62 +111,51 @@ $(document).ready(function () {
         let valueDestination = $(this).siblings(".destination").children().val();
         let valueFreq = $(this).siblings(".freq").children().val();
         console.log("edit set: " + valueName + "," + valueDestination + "," + valueFreq)
-        // grab id
+        // grab id which is the relevant train key in database
         let key = $(this).parent().attr("id")
         console.log('this id on save: ', key)
         // check value and set to database in correct object/node
-        console.log('save: database.ref("/train_schedule/' + key + '")')
         if (valueName !== "" && valueName.trim() !== "") {
             database.ref('/train_schedule/' + key).update({
                 trainName: valueName
-            })
-        }
+            });
+        };
 
         if (valueDestination !== "" && valueDestination.trim() !== "") {
             database.ref('/train_schedule/' + key).update({
                 trainDestination: valueDestination
-            })
-        }
+            });
+        };
 
         if (valueFreq !== "" && valueFreq.trim() !== "") {
             database.ref('/train_schedule/' + key).update({
                 trainFrequency: valueFreq
-            })
-        }
-
-        location.reload()
+            });
+        };
+        location.reload();
     });
 
     // remove button
     $(document).on("click", ".remove", function () {
-        let key = $(this).parent().attr("id")
-        database.ref('/train_schedule/' + key).remove()
-        location.reload()
+        let key = $(this).parent().attr("id");
+        database.ref('/train_schedule/' + key).remove();
+        location.reload();
     });
 
-
-
-    // listen to submit button
-    // then grab fields push to database
+    // submit button
     $("#submit").on("click", function (event) {
-        //event.preventDefault();
+        // grab user input
         let trainName = $("#inputName").val();
         let trainDestination = $("#inputDestination").val();
         let trainFirstRun = $("#inputFirstRun").val();
         let trainFrequency = $("#inputFrequency").val();
-        // console.log(trainName)
-        // console.log(trainDestination)
-        // console.log(trainFirstRun)
-        // console.log(trainFrequency)
-        console.log("time: ", visitTimestamp)
+        // push input to database as new entry/train
         database.ref("/train_schedule").push({
             trainName: trainName,
             trainDestination: trainDestination,
             trainFirstRun: trainFirstRun,
             trainFrequency: trainFrequency
-        })
-        $("#train-table").empty()
+        });
+        $("#train-table").empty();
     });
-
-
 });
