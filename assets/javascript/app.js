@@ -17,6 +17,7 @@ $(document).ready(function () {
         location.reload();
     });
 
+    // function to print results from database
     function printTable() {
         database.ref("/train_schedule").on("child_added", function (snapshot) {
             console.log("snap: ", snapshot)
@@ -82,17 +83,11 @@ $(document).ready(function () {
         }
     }, 1000);
 
-    // set page to refresh every minute
-    // setInterval(function () {
-    //     console.log("60 sec", moment()._d);
-    //     // $("#train-table").empty();
-    //     // printTable();
-    // }, 60000);
 
     // edit button
     $(document).on("click", ".edit", function () {
         // isolate this .name .destination .freq
-        let trainRow = $(this).siblings(".editable");
+        let trainRow = $(this).parent().siblings(".editable");
         console.log("trainRow class: ", $(trainRow).attr("class"));
         // let trainRowClass = $(trainRow).attr("class");
         // $(trainRow).on("<td>").replaceWith("<td><input>");
@@ -107,12 +102,12 @@ $(document).ready(function () {
     // save button
     $(document).on("click", ".save", function () {
         // grab value
-        let valueName = $(this).siblings(".name").children().val();
-        let valueDestination = $(this).siblings(".destination").children().val();
-        let valueFreq = $(this).siblings(".freq").children().val();
+        let valueName = $(this).parent().siblings(".name").children().val();
+        let valueDestination = $(this).parent().siblings(".destination").children().val();
+        let valueFreq = $(this).parent().siblings(".freq").children().val();
         console.log("edit set: " + valueName + "," + valueDestination + "," + valueFreq)
         // grab id which is the relevant train key in database
-        let key = $(this).parent().attr("id")
+        let key = $(this).parents("tr").attr("id")
         console.log('this id on save: ', key)
         // check value and set to database in correct object/node
         if (valueName !== "" && valueName.trim() !== "") {
@@ -137,13 +132,13 @@ $(document).ready(function () {
 
     // remove button
     $(document).on("click", ".remove", function () {
-        let key = $(this).parent().attr("id");
+        let key = $(this).parents("tr").attr("id");
         database.ref('/train_schedule/' + key).remove();
         location.reload();
     });
 
     // submit button
-    $("#submit").on("click", function (event) {
+    $("#submit").on("click", function () {
         // grab user input
         let trainName = $("#inputName").val();
         let trainDestination = $("#inputDestination").val();
@@ -158,4 +153,15 @@ $(document).ready(function () {
         });
         $("#train-table").empty();
     });
+
+    // sign out
+    $("#sign-out").on("click", function () {
+        firebase.auth().signOut().then(function () {
+            // Sign-out successful.
+            console.log("sign-out successful")
+        }).catch(function (error) {
+            // An error happened.
+            console.log("error message in firebase")
+        });
+    })
 });

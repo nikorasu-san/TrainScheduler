@@ -5,80 +5,147 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
-    <title>Train Scheduler</title>
+    <script src="https://cdn.firebase.com/libs/firebaseui/3.5.2/firebaseui.js"></script>
+    <link type="text/css" rel="stylesheet" href="https://cdn.firebase.com/libs/firebaseui/3.5.2/firebaseui.css" />
+    <title>Sign in</title>
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css"
         integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
     <link rel="stylesheet" href="./assets/css/style.css">
 </head>
 
 <body>
+    <!-- The surrounding HTML is left untouched by FirebaseUI.
+     Your app may use that space for branding, controls and other customizations.-->
     <div class="container">
         <div class="card bg-dark">
             <div id="title" class="card-body text-white bg-dark text-center">
                 <h1>Train Scheduler</h1>
-                <h5>Brought to you by some cool kid</h5>
+                <h5>Brought to you by Nick Williams</h5>
             </div>
         </div>
-        <br>
-        <div class="card">
-            <div class="card-header">
-                Current Train Schedule
-            </div>
-            <div class="card-body">
-                <div class="progress">
-                    <div class="progress-bar" role="progressbar" aria-valuenow="0" aria-valuemin="0"
-                        aria-valuemax="100"></div>
-                </div>
-                <button id="refresh" class="btn btn-primary">Refresh</button>
-                <br><br>
-                <table class="table text-center">
-                    <thead>
-                        <tr>
-                            <th scope="col">Train Name</th>
-                            <th scope="col">Destination</th>
-                            <th scope="col">Frequency (min)</th>
-                            <th scope="col">Next Arrival</th>
-                            <th scope="col">Minutes Away</th>
-                            <th scope="col">Controls</th>
-                        </tr>
-                    </thead>
-                    <tbody id='train-table'>
-                    </tbody>
-                </table>
-            </div>
-        </div>
-        <br></br>
-        <div class="card">
-            <div class="card-header">
-                Add A Train
-            </div>
-            <div class="card-body">
-                <form>
-                    <div class="form-group">
-                        <label for="formGroupExampleInput">Train Name</label>
-                        <input type="text" class="form-control" id="inputName" placeholder="MTA Red Line">
-                    </div>
-                    <div class="form-group">
-                        <label for="formGroupExampleInput2">Destination</label>
-                        <input type="text" class="form-control" id="inputDestination" placeholder="Howard">
-                    </div>
-                    <div class="form-group">
-                        <label for="formGroupExampleInput2">First Train Time (HH:mm) - 24 hours</label>
-                        <input type="text" class="form-control" id="inputFirstRun" placeholder="03:45">
-                    </div>
-                    <div class="form-group">
-                        <label for="formGroupExampleInput2">Frequency (min)</label>
-                        <input type="text" class="form-control" id="inputFrequency" placeholder="5">
-                    </div>
-                    <button id="submit" class="btn btn-success">Submit</button>
-                </form>
-            </div>
-        </div>
-        <script src="https://code.jquery.com/jquery-3.3.1.min.js"
-            integrity="sha256-FgpCb/KJQlLNfOu91ta32o/NMZxltwRo8QtmkMRdAu8=" crossorigin="anonymous"></script>
-        <script src="https://cdn.jsdelivr.net/npm/moment@2.24.0/moment.min.js"></script>
-        <script src="https://www.gstatic.com/firebasejs/5.8.6/firebase.js"></script>
-        <script src="./assets/javascript/app.js"></script>
+        <div id="firebaseui-auth-container"></div>
+        <div id="loader" class="text-center">Loading...</div>
+    </div>
+    <script src="https://www.gstatic.com/firebasejs/5.8.6/firebase.js"></script>
+    <script src="https://code.jquery.com/jquery-3.3.1.min.js"
+        integrity="sha256-FgpCb/KJQlLNfOu91ta32o/NMZxltwRo8QtmkMRdAu8=" crossorigin="anonymous"></script>
+    <script>
+        // Initialize Firebase
+        var config = {
+            apiKey: "AIzaSyBM_dNWCIKLsZ7HcFJH6JSJ0wIh9MtL7ec",
+            authDomain: "class-test-e0f98.firebaseapp.com",
+            databaseURL: "https://class-test-e0f98.firebaseio.com",
+            projectId: "class-test-e0f98",
+            storageBucket: "class-test-e0f98.appspot.com",
+            messagingSenderId: "1067230549341"
+        };
+        firebase.initializeApp(config);
+        let database = firebase.database();
+        // Initialize the FirebaseUI Widget using Firebase.
+        var ui = new firebaseui.auth.AuthUI(firebase.auth());
+
+        ui.start('#firebaseui-auth-container', {
+            signInOptions: [
+                firebase.auth.EmailAuthProvider.PROVIDER_ID,
+                firebase.auth.GoogleAuthProvider.PROVIDER_ID,
+                firebase.auth.FacebookAuthProvider.PROVIDER_ID,
+                firebase.auth.TwitterAuthProvider.PROVIDER_ID,
+                firebase.auth.GithubAuthProvider.PROVIDER_ID,
+                firebaseui.auth.AnonymousAuthProvider.PROVIDER_ID
+            ],
+            // Other config options...
+            callbacks: {
+                // signInFailure callback must be provided to handle merge conflicts which
+                // occur when an existing credential is linked to an anonymous user.
+                signInFailure: function (error) {
+                    // For merge conflicts, the error.code will be
+                    // 'firebaseui/anonymous-upgrade-merge-conflict'.
+                    if (error.code != 'firebaseui/anonymous-upgrade-merge-conflict') {
+                        return Promise.resolve();
+                    }
+                    // The credential the user tried to sign in with.
+                    var cred = error.credential;
+                    // Copy data from anonymous user to permanent user and delete anonymous
+                    // user.
+                    // ...
+                    // Finish sign-in after data is copied.
+                    return firebase.auth().signInWithCredential(cred);
+                }
+            }
+        });
+
+        var uiConfig = {
+            callbacks: {
+                signInSuccessWithAuthResult: function (authResult, redirectUrl) {
+                    // User successfully signed in.
+                    // Return type determines whether we continue the redirect automatically
+                    // or whether we leave that to developer to handle.
+                    return true;
+                },
+                uiShown: function () {
+                    // The widget is rendered.
+                    // Hide the loader. class="text-white"
+                    document.getElementById('loader').style.display = 'none';
+                }
+            },
+            // Will use popup for IDP Providers sign-in flow instead of the default, redirect.
+            signInFlow: 'popup',
+            signInSuccessUrl: './home.html',
+            signInOptions: [
+                // Leave the lines as is for the providers you want to offer your users.
+                firebase.auth.GoogleAuthProvider.PROVIDER_ID,
+                firebase.auth.GithubAuthProvider.PROVIDER_ID,
+                firebase.auth.EmailAuthProvider.PROVIDER_ID,
+                firebaseui.auth.AnonymousAuthProvider.PROVIDER_ID
+            ],
+            // Terms of service url.
+            tosUrl: '#',
+            // Privacy policy url.
+            privacyPolicyUrl: '#'
+        };
+        var actionCodeSettings = {
+            // URL you want to redirect back to. The domain (www.example.com) for this
+            // URL must be whitelisted in the Firebase Console.
+            url: 'https://nikorasu-san.github.io/TrainScheduler/home.html',
+            // This must be true.
+            // handleCodeInApp: true,
+            // iOS: {
+            //     bundleId: 'com.example.ios'
+            // },
+            // android: {
+            //     packageName: 'com.example.android',
+            //     installApp: true,
+            //     minimumVersion: '12'
+            // },
+            // dynamicLinkDomain: 'example.page.link'
+        };
+
+        firebase.auth().sendSignInLinkToEmail(email, actionCodeSettings)
+            .then(function () {
+                // The link was successfully sent. Inform the user.
+                // Save the email locally so you don't need to ask the user for it again
+                // if they open the link on the same device.
+                window.localStorage.setItem('emailForSignIn', email);
+            })
+            .catch(function (error) {
+                // Some error occurred, you can inspect the code: error.code
+                console.log("an error occurred")
+            });
+        firebase.auth().sendSignInLinkToEmail(email, actionCodeSettings)
+            .then(function () {
+                // The link was successfully sent. Inform the user.
+                // Save the email locally so you don't need to ask the user for it again
+                // if they open the link on the same device.
+                window.localStorage.setItem('emailForSignIn', email);
+            })
+            .catch(function (error) {
+                // Some error occurred, you can inspect the code: error.code
+            });
+
+        // The start method will wait until the DOM is loaded.
+        ui.start('#firebaseui-auth-container', uiConfig);
+    </script>
 </body>
+
 
 </html>
