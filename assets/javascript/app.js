@@ -20,9 +20,6 @@ $(document).ready(function () {
     // function to print results from database
     function printTable() {
         database.ref("/train_schedule").on("child_added", function (snapshot) {
-            console.log("snap: ", snapshot)
-            console.log("key: ", snapshot.key)
-            console.log("before if: ", snapshot.val());
             let train = snapshot.val()
             let row = $("<tr>");
             $(row).attr("id", snapshot.key)
@@ -32,16 +29,15 @@ $(document).ready(function () {
             $(colDestination).html(train.trainDestination)
             let colFrequency = $("<td class='freq editable'>");
             $(colFrequency).html(train.trainFrequency);
-            // math for next train and minutes to next train
+            // math and column for minutes till next train
             let initialRun = moment(train.trainFirstRun, "HH:mm").subtract(1, "months");
             console.log("1 month subtracted: ", initialRun);
             let timeDiff = moment().diff(moment(initialRun), "minutes");
             let remainder = timeDiff % train.trainFrequency;
-            //console.log("remainder: ", remainder)
             let minutesAway = train.trainFrequency - remainder;
             let colMinutesAway = $("<td class='min-away'>");
             $(colMinutesAway).html(minutesAway)
-            //console.log("min away: ", minutesAway)
+            // column for next train
             let nextTrain = moment().add(minutesAway, "minutes");
             let nextTrainFormat = moment(nextTrain).format("HH:mm");
             let colNextTrain = $("<td class='next-train'>");
@@ -53,8 +49,7 @@ $(document).ready(function () {
             let removeButton = $("<button class='remove btn btn-danger'>");
             $(removeButton).html("Remove");
             $(colControls).append(editButton, removeButton);
-
-            // print row
+            // print row for train details
             $(row).append(colName, colDestination, colFrequency, colNextTrain, colMinutesAway, colControls);
             $("#train-table").append(row);
         }, function (errorObject) {
@@ -86,43 +81,37 @@ $(document).ready(function () {
 
     // edit button
     $(document).on("click", ".edit", function () {
-        // isolate this .name .destination .freq
+        // isolate this name, destination, & freq cells in row
         let trainRow = $(this).parent().siblings(".editable");
-        console.log("trainRow class: ", $(trainRow).attr("class"));
-        // let trainRowClass = $(trainRow).attr("class");
-        // $(trainRow).on("<td>").replaceWith("<td><input>");
+        // turn those cells into input elements
         $(trainRow).html("<input>");
-        // $("input").addClass(trainRowClass);
-        $("input").addClass("field");
-        console.log("this ", this);
+        // update button into a save button
         $(this).attr("class", "save btn btn-success");
         $(this).text("Save");
     });
 
     // save button
     $(document).on("click", ".save", function () {
-        // grab value
+        // grab value from input fields on desired train/row 
         let valueName = $(this).parent().siblings(".name").children().val();
         let valueDestination = $(this).parent().siblings(".destination").children().val();
         let valueFreq = $(this).parent().siblings(".freq").children().val();
-        console.log("edit set: " + valueName + "," + valueDestination + "," + valueFreq)
         // grab id which is the relevant train key in database
         let key = $(this).parents("tr").attr("id")
-        console.log('this id on save: ', key)
-        // check value and set to database in correct object/node
-        if (valueName !== "" && valueName.trim() !== "") {
+        // check if there is a real value and set value to relevant object/train in database
+        if (valueName.trim() !== "") {
             database.ref('/train_schedule/' + key).update({
                 trainName: valueName
             });
         };
 
-        if (valueDestination !== "" && valueDestination.trim() !== "") {
+        if (valueDestination.trim() !== "") {
             database.ref('/train_schedule/' + key).update({
                 trainDestination: valueDestination
             });
         };
 
-        if (valueFreq !== "" && valueFreq.trim() !== "") {
+        if (valueFreq.trim() !== "") {
             database.ref('/train_schedule/' + key).update({
                 trainFrequency: valueFreq
             });
@@ -154,14 +143,4 @@ $(document).ready(function () {
         $("#train-table").empty();
     });
 
-    // sign out
-    $("#sign-out").on("click", function () {
-        firebase.auth().signOut().then(function () {
-            // Sign-out successful.
-            console.log("sign-out successful")
-        }).catch(function (error) {
-            // An error happened.
-            console.log("error message in firebase")
-        });
-    })
 });
