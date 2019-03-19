@@ -14,4 +14,6 @@ The train schedule will reload every minute to give the most accurate minutes aw
 - Photo credit - https://www.pexels.com/photo/train-during-golden-hour-1771670/
 
 ## Future Recommendations
-- Allow users to save edits to multiple trains at once
+- Allow users to save edits to multiple trains at once.
+- Complete the installment of Firebase Authentication to trigger a sign-in request for users.
+- Find alternative solutions for triggering database downloads to prevent relying on location.reload().
